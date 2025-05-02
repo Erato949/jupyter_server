@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-# Paths
+# Define key paths used throughout the script
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$SCRIPT_DIR"
 VENV_DIR="$PROJECT_DIR/venv"
@@ -30,8 +30,8 @@ done
 # Function to install optional dependency groups
 install_optional() {
     local group=$1
-    local py_exe=$2 # Expect venv python exe
-    local proj_dir_win="$3" # Expect Windows project dir path (ensure quotes)
+    local py_exe=$2 # Expect venv python exe (passed by setup_environment)
+    local proj_dir_win="$3" # Expect Windows project dir path (passed by setup_environment, ensure quotes)
 
     # Construct Windows path within quotes
     local req_file_win="$proj_dir_win/requirements-${group}.txt"
@@ -48,9 +48,9 @@ install_optional() {
     fi
 }
 
-# Setup Environment
+# Setup Environment: Creates venv (if needed externally), installs base and optional requirements.
 setup_environment() {
-    local proj_dir_win="$1" # Expect Windows project dir path as the first argument
+    local proj_dir_win="$1" # Expect Windows project dir path from the calling process
 
     if [ -z "$proj_dir_win" ]; then
         echo " ERROR: Windows Project Directory path was not provided to setup_environment function."
@@ -68,6 +68,7 @@ setup_environment() {
     fi
 
     # --- Find Python executable INSIDE the venv --- 
+    # This ensures we use the correct interpreter within the virtual environment.
     VENV_PYTHON_EXE=""
     if [ -f "$VENV_DIR/Scripts/python.exe" ]; then
         # Windows - use directly
@@ -83,7 +84,7 @@ setup_environment() {
 
     echo " Using venv Python for pip: $VENV_PYTHON_EXE"
 
-    # Construct Windows path within quotes
+    # Construct Windows path for requirements file, ensuring quotes for pip.
     REQUIREMENTS_BASE_WIN="$proj_dir_win/requirements-base.txt"
     # Print constructed path carefully
     echo " Using base requirements path for pip: $REQUIREMENTS_BASE_WIN"
@@ -134,9 +135,10 @@ setup_environment() {
     fi
 }
 
-# Start Jupyter Server
+# Start Jupyter Server: Finds venv python, starts server in background, saves PID.
 start_server() {
     # --- Add Internal Venv Python Finding Logic ---
+    # Script finds the python executable within the expected venv structure.
     local venv_python_exe=""
     if [ -f "$VENV_DIR/Scripts/python.exe" ]; then
         venv_python_exe="$VENV_DIR/Scripts/python.exe"
@@ -164,7 +166,7 @@ start_server() {
     
     # Run Jupyter using the internally found venv Python executable
     echo "Starting Jupyter server in the background... Logging to $LOG_FILE"
-    # Add --ip=0.0.0.0 and disable token auth for easier connection
+    # Add --ip=0.0.0.0 (listen on all interfaces) and disable token auth for easier local connection
     nohup "$venv_python_exe" -m jupyter notebook --no-browser --ip=0.0.0.0 --NotebookApp.token='' >> "$LOG_FILE" 2>&1 &
     
     # Save PID
@@ -172,7 +174,7 @@ start_server() {
     echo " Jupyter server started. PID $(cat "$PID_FILE")"
 }
 
-# Stop Jupyter Server
+# Stop Jupyter Server: Reads PID file, kills process, removes PID file.
 stop_server() {
     if [ ! -f "$PID_FILE" ]; then
         echo "No PID file found. Server may not be running."
@@ -191,7 +193,7 @@ stop_server() {
     fi
 }
 
-# Restart Jupyter Server
+# Restart Jupyter Server: Calls stop_server then start_server.
 restart_server() {
     echo "Restarting Jupyter server..."
     stop_server
@@ -213,9 +215,11 @@ status_server() {
     fi
 }
 
-# Main command router
+# --- Main Execution Logic --- 
+
+# Main command router: Determines which function to call based on the first argument.
 COMMAND=$1
-# ARG2 is now only relevant for setup
+# ARG2 is now only relevant for setup (Windows project directory path)
 ARG2=$2 
 
 # Main command router
@@ -237,7 +241,7 @@ case $COMMAND in
         setup_environment "$ARG2" "${@:3}"
         ;;
     *)
-        # Update usage message
+        # Update usage message to reflect that start/restart no longer take python path
         echo "Usage: $0 {start|stop|restart|status|setup <win_proj_dir_path> [optional_flags]}"
         exit 1
         ;;
