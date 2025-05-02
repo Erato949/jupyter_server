@@ -162,15 +162,12 @@ start_server() {
         fi
     fi
 
-    echo "Starting Jupyter Notebook server using $venv_python_exe ..."
-    
-    # Run Jupyter using the internally found venv Python executable
+    echo "Starting Jupyter Notebook server in the background..."
+    # CRITICAL FIX: Changed --ip=0.0.0.0 to --ip=127.0.0.1 and removed --NotebookApp.token=''
+    nohup "$venv_python_exe" -m jupyter notebook --no-browser --ip=127.0.0.1 >> "$LOG_FILE" 2>&1 &
+    server_pid=$!
     echo "Starting Jupyter server in the background... Logging to $LOG_FILE"
-    # Add --ip=0.0.0.0 (listen on all interfaces) and disable token auth for easier local connection
-    nohup "$venv_python_exe" -m jupyter notebook --no-browser --ip=0.0.0.0 --NotebookApp.token='' >> "$LOG_FILE" 2>&1 &
-    
-    # Save PID
-    echo $! > "$PID_FILE"
+    echo $server_pid > "$PID_FILE"
     echo " Jupyter server started. PID $(cat "$PID_FILE")"
 }
 
