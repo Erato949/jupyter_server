@@ -1,0 +1,4 @@
+langchain==0.3.25
+crewai==0.118.0
+autogen==0.9
+openai==1.77.0

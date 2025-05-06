@@ -1,0 +1,8 @@
+tensorflow
+keras
+torch
+torchvision
+torchaudio
+jax
+flax
+optax
