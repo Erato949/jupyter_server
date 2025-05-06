@@ -1,0 +1,10 @@
+transformers
+sentence-transformers
+peft
+trl
+diffusers
+accelerate
+faiss-cpu
+chromadb
+pinecone-client
+qdrant-client

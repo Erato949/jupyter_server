@@ -4,8 +4,14 @@ Based on the security audit performed on 2025-05-02.
 
 ## Open Tasks
 
-
 ## Completed Tasks
+
+- [x] **Define and Pin Dependency Versions (Agent Libraries)**
+  - **Files:** `requirements-base.txt`, `requirements-agents.in`, `requirements-agents.txt`
+  - **Action:** Used `pip-tools` to add specific version constraints. Resolved conflicts for `fastapi` and `rich` in `requirements-base.txt`. Successfully compiled `requirements-agents.txt` with pinned versions for `langchain==0.3.25`, `crewai==0.118.0`, `autogen==0.9`, and `openai==1.77.0`.
+  - **Completed:** 2025-05-06
+  - **Note:** Other `requirements-*.txt` files (e.g., for CPU/GPU environments if they exist and were not part of this specific resolution effort) may still require similar pinning and conflict resolution.
+  - **Priority:** Medium
 
 - [x] **Task 3: Clear Exposed Token from Notebook Output**
   - **File:** `manage_server.ipynb`
